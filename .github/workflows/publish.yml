@@ -37,7 +37,8 @@ jobs:
       run: |
         staging="${{ env.EXEC }}-${{github.event.release.tag_name}}-${{ matrix.target }}"
         mkdir "$staging"
-        strip target/${{ matrix.target }}/release/${{ env.EXEC }}
+        #strip not recognized on aarch64
+        #strip target/${{ matrix.target }}/release/${{ env.EXEC }}
         cp target/${{ matrix.target }}/release/${{ env.EXEC }} "$staging/"
         tar czf "$staging.tar.gz" "$staging"
         gh release upload ${{github.event.release.tag_name}} "$staging.tar.gz"
