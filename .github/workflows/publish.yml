@@ -4,40 +4,45 @@ on:
   release:
     types: [published]
 
+env:
+  EXEC: test-cgi
+
 permissions:
   contents: write
 
 jobs:
   upload-test-cgi:
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     strategy: 
       matrix:
         target: [ aarch64-unknown-linux-gnu,  x86_64-unknown-linux-gnu]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v1
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-          target: ${{ matrix.target }}
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        target: ${{ matrix.target }}
 
-      - name: Build target
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --release --target ${{ matrix.target }}
-    - name: Upload test-cgi to Github release
+    - name: Build target
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: build
+        args: --release --target ${{ matrix.target }}
+    - name: Upload ${{ env.EXEC }} to Github release
       run: |
-        staging="test-cgi-${{github.event.release.tag_name}}-${{ matrix.platform }}"
+        staging="${{ env.EXEC }}-${{github.event.release.tag_name}}-${{ matrix.target }}"
         mkdir "$staging"
-        cp target/release/${{ matrix.exec }} "$staging/"
+        strip target/${{ matrix.target }}/release/${{ env.EXEC }}
+        cp target/${{ matrix.target }}/release/${{ env.EXEC }} "$staging/"
         tar czf "$staging.tar.gz" "$staging"
         gh release upload ${{github.event.release.tag_name}} "$staging.tar.gz"
       env:
         GITHUB_TOKEN: ${{ github.TOKEN }}
       shell: bash
+
 
